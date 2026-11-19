@@ -1,13 +1,14 @@
 Name:		dirgra
-Version:	0.3
+Version:	0.6
 Release:	1
 Summary:	Directed graph used by JRuby
 Group:		Development/Java
 License:	EPL-1.0
 URL:		https://github.com/jruby/dirgra
-# Tag 0.3. Eight Java sources. JRuby 9.4.14 compiles against this
-# artifact. Upstream tests are Ruby specs. This package compiles with
-# javac and checks DirectedGraph.addEdge.
+# Tag dirgra-0.6. Eight Java sources. module-info is omitted because
+# this jar targets Java 8. DirectedGraph's edge type is a type
+# parameter. Upstream tests are Ruby specs. This package compiles
+# with javac and checks DirectedGraph.addEdge.
 Source0:	dirgra-%{version}.tar.gz
 
 BuildArch:	noarch
@@ -16,12 +17,15 @@ BuildRequires:	sysjar
 BuildRequires:	javapackages-filesystem
 
 %description
-org.jruby:dirgra %{version}. DirectedGraph.addEdge records a source
-and a destination, and size returns the number of vertices. The
-sources are compiled with javac.
+org.jruby:dirgra %{version}. DirectedGraph takes the vertex type and
+the edge type. addEdge records a source, a destination, and that
+edge type, and size returns the number of vertices. The sources are
+compiled with javac.
 
 %prep
 %autosetup -n dirgra-%{version} -p1
+# The module descriptor needs a newer release than this Java 8 jar.
+rm -f src/module-info.java
 find . -type f \( -name '*.jar' -o -name '*.class' -o -name '*.so' -o -name '*.node' -o -name '*.wasm' \) -print > binaries.list
 find . -type d -name '*.jar' -print >> binaries.list
 if [ -s binaries.list ]; then
@@ -56,7 +60,7 @@ cat > dirgra.pom << 'END'
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jruby</groupId>
   <artifactId>dirgra</artifactId>
-  <version>0.3</version>
+  <version>0.6</version>
   <name>dirgra</name>
   <description>Simple directed graph.</description>
   <url>https://github.com/jruby/dirgra</url>
@@ -77,7 +81,7 @@ sysjar install --buildroot %{buildroot} \
 	--filelist .mfiles
 idx="%{buildroot}/usr/share/sysjar/index/org.jruby/dirgra.sysjar"
 test -s "$idx"
-grep -F -q '"version": "0.3"' "$idx"
+grep -F -q '"version": "0.6"' "$idx"
 grep -F -q '"artifactId": "dirgra"' "$idx"
 test -s %{buildroot}%{_javadir}/dirgra.jar
 
@@ -106,7 +110,7 @@ public class Smoke {
     }
 
     public static void main(String[] args) {
-        DirectedGraph<Node> graph = new DirectedGraph<Node>();
+        DirectedGraph<Node, String> graph = new DirectedGraph<Node, String>();
         graph.addEdge(new Node(1), new Node(2), "uses");
         int size = graph.size();
         if (size != 2) {
